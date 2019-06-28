@@ -7,7 +7,7 @@ setup(
     name='ijr',
     version=__version__,
     packages=['ijr'],
-    url='https://www.ijsvogelretail.nl/',
+    url='https://github.com/IJsvogel/ijr',
     license='MIT',
     author='Herman Holterman',
     author_email='herman.holterman@gmail.com',

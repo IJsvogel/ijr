@@ -4,7 +4,7 @@ import logging
 
 from google.cloud import pubsub
 
-from generic_lib import running_in_gcf
+from ijr.generic_lib import running_in_gcf
 
 
 def default_object(o):
