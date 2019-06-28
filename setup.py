@@ -1,0 +1,16 @@
+from setuptools import setup
+
+
+__version__ = '0.0.1'
+
+setup(
+    name='ijr',
+    version=__version__,
+    packages=['ijr'],
+    url='https://www.ijsvogelretail.nl/',
+    license='MIT',
+    author='Herman Holterman',
+    author_email='herman.holterman@gmail.com',
+    description='IJsvogel Package',
+    install_requires=['pymongo', 'google-cloud-pubsub']
+)
