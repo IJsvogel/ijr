@@ -1,2 +1,2 @@
-pymongo
-google-cloud-pubsub
+pymongo==3.8.0
+google-cloud-pubsub==0.42.1

@@ -3,9 +3,6 @@ from datetime import datetime
 from pymongo import MongoClient, ReplaceOne, InsertOne
 
 
-# Connect with 3.4 connection-string to Atlas -> user:pwd@server....
-
-
 class MongoWriter(object):
     _threshold = 250
 

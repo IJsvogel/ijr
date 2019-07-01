@@ -1,16 +1,9 @@
-import datetime
 import json
 import logging
 
 from google.cloud import pubsub
 
-from ijr.generic_lib import running_in_gcf
-
-
-def default_object(o):
-    if isinstance(o, (datetime.date, datetime.datetime)):
-        return o.isoformat()
-    raise TypeError("Type %s not serializable" % type(o))
+from ijr.generic_lib import running_in_gcf, default_object
 
 
 class PubSubPublisher(object):
@@ -23,7 +16,7 @@ class PubSubPublisher(object):
         if running_in_gcf():
             self._client = pubsub.PublisherClient()
         else:
-            logging.warning('PubSubPublisher -> Running local; using account.json')
+            logging.warning('PubSubPublisher -> Running local; using ./account.json')
             self._client = pubsub.PublisherClient.from_service_account_json('account.json')
 
     def __enter__(self):
