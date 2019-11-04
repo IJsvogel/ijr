@@ -49,10 +49,10 @@ class MongoReader(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._client.close()
 
-    def find(self, db_name, collection_name, query, sorting=None, limit=-1):
+    def find(self, db_name, collection_name, query, sorting=None, limit=-1, projection=None):
         db = self._client.get_database(db_name)
         col = db.get_collection(collection_name)
-        ret = col.find(query)
+        ret = col.find(query, projection)
         if sorting:
             ret.sort(sorting)
         if limit > 0:
