@@ -9,10 +9,10 @@ from ijr.generic_lib import running_in_gcf, default_object
 class PubSubPublisher(object):
     _threshold = 25
 
-    def __init__(self, topic, msg_type):
+    def __init__(self, topic, msg_type='Generic'):
         self._messages = list()
         self._topic = topic
-        self._type = msg_type
+        self.msg_type = msg_type
         if running_in_gcf():
             self._client = pubsub.PublisherClient()
         else:
@@ -25,10 +25,20 @@ class PubSubPublisher(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._publish_messages()
 
+    @property
+    def msg_type(self):
+        return self.__msg_type
+
+    @msg_type.setter
+    def msg_type(self, prop_value):
+        if prop_value is None:
+            raise Exception("msg_type can't be None")
+        self.__msg_type = prop_value
+
     def _publish_messages(self):
         if not self._messages:
             return
-        msg_dict = dict(_type=self._type,
+        msg_dict = dict(_type=self.msg_type,
                         data=self._messages)
         msg = json.dumps(msg_dict, sort_keys=True, default=default_object)
         ret = self._client.publish(self._topic, msg.encode()).result()
