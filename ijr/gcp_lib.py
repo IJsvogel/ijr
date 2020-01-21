@@ -9,11 +9,11 @@ from ijr.generic_lib import running_in_gcf, default_object
 class PubSubPublisher(object):
     _threshold = 25
 
-    def __init__(self, topic, msg_type='Generic', msg_source='default'):
+    def __init__(self, topic, msg_type='Generic', **kwargs):
         self._messages = list()
         self._topic = topic
         self.msg_type = msg_type
-        self._msg_source = msg_source
+        self._msg_kwargs = {k: v for k, v in kwargs.items()}
         if running_in_gcf():
             self._client = pubsub.PublisherClient()
         else:
@@ -42,7 +42,7 @@ class PubSubPublisher(object):
         msg_dict = dict(_type=self.msg_type,
                         data=self._messages)
         msg = json.dumps(msg_dict, sort_keys=True, default=default_object)
-        ret = self._client.publish(self._topic, msg.encode(), source=self._msg_source).result()
+        ret = self._client.publish(self._topic, msg.encode(), **self._msg_kwargs).result()
         self._messages.clear()
         return ret
 
