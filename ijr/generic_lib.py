@@ -76,7 +76,10 @@ class Compare(object):
         self.new_dict = new_dictionary
         self.ignore_starting = ignore_starting
         self.ignore_ending = ignore_ending
-        self.result = self.deepcompare(ignore_starting=self.ignore_starting, ignore_ending=self.ignore_starting)
+        self.result = self.deepcompare(old_dict=old_dictionary,
+                                       new_dict=new_dictionary,
+                                       ignore_starting=self.ignore_starting,
+                                       ignore_ending=self.ignore_starting)
         self.flatresult = self.flat()
 
     @staticmethod
@@ -126,6 +129,8 @@ class Compare(object):
                 # parent_value was not a dict, no need to flatten
                 yield (f'{parent_key}', parent_value)
 
+        if not isinstance(dictionary, dict):
+            return dictionary
         while any(isinstance(value, dict) for value in dictionary.values()): # TODO secure breaking
             # Keep unpacking the dictionary until all value's are not dictionary's
             try:
@@ -175,7 +180,7 @@ class Compare(object):
             result = {f'{index}': self.listtodict(value) for index, value in enumerate(lst)}
         return result
 
-    def deepcompare(self, old_dict=None, new_dict=None, ignore_starting=None, ignore_ending=None):
+    def deepcompare(self, old_dict, new_dict, ignore_starting=None, ignore_ending=None):
         """Compare nested dictionaries, including lists recursively
         :param old_dict: the dictionary to be compared with
         :param new_dict: the dictionary to compare 
@@ -184,10 +189,6 @@ class Compare(object):
         :param unnested_result: boolean if return unnest(normalized) result
         :param separator: if unnested_result separator used to normalize keys
         """
-        if not old_dict:
-            old_dict = self.old_dict
-        if not new_dict:
-            new_dict = self.new_dict
         if old_dict == new_dict:
             return
         result = {}
