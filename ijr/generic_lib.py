@@ -151,14 +151,10 @@ class Compare(object):
             clean_keys = set()
             for key in set_of_keys:
                 if starting and ending and key.startswith(starting) and key.endswith(ending):
-                    print('removing keys for starting and ending with:',
-                          starting, ending)
                     continue
                 elif starting and key.startswith(starting):
-                    print('removing keys starting with:', starting)
                     continue
                 elif ending and key.endswith(ending):
-                    print('removing keys ending with:', ending)
                     continue
                 else:
                     clean_keys.add(key)
