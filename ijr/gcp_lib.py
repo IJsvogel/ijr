@@ -13,7 +13,7 @@ class PubSubPublisher(object):
         self._messages = list()
         self._topic = topic
         self.msg_type = msg_type
-        self._msg_kwargs = {k: v for k, v in kwargs.items()}
+        self._msg_kwargs = {k: str(v) for k, v in kwargs.items()}  # cast values to string for passing to pub/sub
         if running_in_gcf():
             self._client = pubsub.PublisherClient()
         else:
@@ -42,11 +42,8 @@ class PubSubPublisher(object):
         msg_dict = dict(_type=self.msg_type,
                         data=self._messages)
 
-        # msg = json.dumps(msg_dict, sort_keys=True, default=default_object)
-        # ret = self._client.publish(self._topic, msg.encode(), **self._msg_kwargs).result()
         msg = json.dumps(msg_dict, sort_keys=True, default=default_object)
-        attr_data = json.dumps(**self._msg_kwargs, default=default_object)
-        ret = self._client.publish(self._topic, msg.encode(), attr_data).result()
+        ret = self._client.publish(self._topic, msg.encode(), **self._msg_kwargs).result()
 
         self._messages.clear()
         return ret
