@@ -88,6 +88,7 @@ class MongoWriter(object):
         if len(self._statements) > self._threshold:
             self._write_to_server()
 
+
 class MongoReader(object):
     def __init__(self, mdb_server, mdb_user, mdb_pass):
         self._client = MongoClient('mongodb://%s:%s@%s' % (mdb_user, mdb_pass, mdb_server))
