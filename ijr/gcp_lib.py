@@ -41,8 +41,13 @@ class PubSubPublisher(object):
             return
         msg_dict = dict(_type=self.msg_type,
                         data=self._messages)
+
+        # msg = json.dumps(msg_dict, sort_keys=True, default=default_object)
+        # ret = self._client.publish(self._topic, msg.encode(), **self._msg_kwargs).result()
         msg = json.dumps(msg_dict, sort_keys=True, default=default_object)
-        ret = self._client.publish(self._topic, msg.encode(), **self._msg_kwargs).result()
+        attr_data = json.dumps(**self._msg_kwargs, default=default_object)
+        ret = self._client.publish(self._topic, msg.encode(), attr_data).result()
+
         self._messages.clear()
         return ret
 
