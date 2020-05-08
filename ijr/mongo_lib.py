@@ -116,3 +116,7 @@ class MongoReader(object):
         ret = col.aggregate(pipeline, allowDiskUse=True)
         for r in ret:
             yield r
+
+    def collections(self, db_name):
+        db = self._client.get_database(db_name)
+        return db.list_collection_names()
