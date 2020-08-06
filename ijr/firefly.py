@@ -65,20 +65,6 @@ class Secrets:
         return secrets
 
 
-# create class object
-secret_getter = Secrets('ijsvogelretail-it-department')
-
-# get dictionaries
-mongo_dict = secret_getter.dict_secert("acc_mongo_user")
-bol_dict = secret_getter.dict_secert("acc_bol_user")
-
-# access variables
-bol = secret_getter.dot_secret("acc_bol_user")
-mongo = secret_getter.dot_secret("acc_mongo_user")
-print(f"mongo.MDB_SERVER: {mongo.MDB_SERVER}")
-print(f"bol.NL.user_name: {bol.NL.user_name}")
-
-
 
 
 
