@@ -12,5 +12,5 @@ setup(
     author='Herman Holterman',
     author_email='herman.holterman@gmail.com',
     description='IJsvogel Package',
-    install_requires=['pymongo', 'google-cloud-pubsub']
+    install_requires=['pymongo', 'google-cloud-pubsub', 'google-cloud-secret-manager']
 )
