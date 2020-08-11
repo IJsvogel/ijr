@@ -30,7 +30,7 @@ class Secrets:
         self.project_id = scraped_id
         self.client = secretmanager.SecretManagerServiceClient()
 
-    def dict_secert(self, secret_id, version_id=None):
+    def dict_secret(self, secret_id, version_id=None):
         """
         Access the payload for the given secret version if one exists. The version
         can be a version number as a string (e.g. "5") or an alias (e.g. "latest").
