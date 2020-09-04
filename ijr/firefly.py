@@ -78,11 +78,12 @@ class Config:
         from os import environ as os
         self._function_name = os.get('FUNCTION_NAME')
         secrets = Secrets(project_id)
-        self.mongo = secrets.dot_secret(os.get(secret_target, 'MONGO'))
+        _secret_target = "none" if secret_target is None else secret_target
+        self.mongo = secrets.dot_secret(os.get(_secret_target, os['Mongo']))
 
     def get_configs_dict(self, function_name=None):
         from ijr.mongo_lib import MongoReader
-        if function_name is None:
+        if not function_name:
             function_name = self._function_name
         with MongoReader(mdb_server=self.mongo.MDB_SERVER, mdb_user=self.mongo.MDB_USER,
                          mdb_pass=self.mongo.MDB_PASS) as mr_configs:
@@ -90,13 +91,7 @@ class Config:
         return next(doc_list, None)
 
     def get_configs_dot(self, function_name=None):
-        from ijr.mongo_lib import MongoReader
-        if function_name is None:
-            function_name = self._function_name
-        with MongoReader(mdb_server=self.mongo.MDB_SERVER, mdb_user=self.mongo.MDB_USER,
-                         mdb_pass=self.mongo.MDB_PASS) as mr_configs:
-            doc_list = list(mr_configs.find(db_name="common", collection_name="configs", query={"_id": function_name}))
-            if doc_list:
-                return NestedNamespace(doc_list[0])
+        temp = self.get_configs_dict(function_name)
+        if temp:
+            return NestedNamespace(temp)
         return None
-
