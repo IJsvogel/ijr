@@ -1,5 +1,4 @@
 import json
-import logging
 
 from google.cloud import pubsub
 
@@ -17,6 +16,7 @@ class PubSubPublisher(object):
         if running_in_gcf():
             self._client = pubsub.PublisherClient()
         else:
+            import logging  # NOTE import only if running outside gcp
             logging.warning('PubSubPublisher -> Running local; using ./account.json')
             self._client = pubsub.PublisherClient.from_service_account_json('account.json')
 
