@@ -6,13 +6,13 @@ from ijr.generic_lib import running_in_gcf, default_object
 
 
 class PubSubPublisher(object):
-    _threshold = 25
 
-    def __init__(self, topic, msg_type='Generic', **kwargs):
+    def __init__(self, topic, msg_type='Generic', threshold=25, **kwargs):
         self._messages = list()
         self._topic = topic
         self.msg_type = msg_type
         self._msg_kwargs = {k: str(v) for k, v in kwargs.items()}  # cast values to string for passing to pub/sub
+        self._threshold = threshold
         if running_in_gcf():
             self._client = pubsub.PublisherClient()
         else:

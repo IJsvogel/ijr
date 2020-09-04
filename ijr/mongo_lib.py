@@ -6,14 +6,14 @@ from pymongo import MongoClient, ReplaceOne, InsertOne, UpdateOne, UpdateMany
 class MongoWriter(object):
     """A MongoClient for bulk writing operations"""
 
-    _threshold = 250
-
-    def __init__(self, mdb_server, mdb_user, mdb_pass, db_name, col_name):
+    def __init__(self, mdb_server, mdb_user, mdb_pass, db_name, col_name, threshold=250):
         self.db_name = db_name
         self.col_name = col_name
         self._statements = list()
         # Connect with 3.4 connection-string to Atlas -> user:pwd@server....
         self._client = MongoClient('mongodb://%s:%s@%s' % (mdb_user, mdb_pass, mdb_server))
+        self._threshold = threshold
+        self._write_counter = 0
 
     def __enter__(self):
         return self
@@ -29,6 +29,7 @@ class MongoWriter(object):
         coll = db.get_collection(self.col_name)
         coll.bulk_write(self._statements)
         self._statements.clear()
+        self._write_counter += 1
 
     def close(self):
         """write statements and disconnect from MongoDB."""
@@ -43,7 +44,6 @@ class MongoWriter(object):
          - `doc_key` (optional): Document key (_id) to be used for 
          document replacement/upsert
         """
-
         doc['_ts'] = datetime.now()
         if doc_key:
             doc['_id'] = '%s' % doc_key
@@ -54,6 +54,7 @@ class MongoWriter(object):
             self._statements.append(InsertOne(document=doc))
         if len(self._statements) > self._threshold:
             self._write_to_server()
+        return self._write_counter
 
     def edit_data(self, query: dict, field: dict, mode: str):
         """edit document
@@ -97,6 +98,9 @@ class MongoReader(object):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    def close(self):
         self._client.close()
 
     def find(self, db_name, collection_name, query, sorting=None, limit=-1, projection=None):
