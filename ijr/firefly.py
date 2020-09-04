@@ -33,8 +33,8 @@ class Secrets:
         if running_in_gcf():
             self.client = secretmanager.SecretManagerServiceClient()
         else:
-            logging.warning('PubSubPublisher -> Running local; using ./account.json')
-            self.client = secretmanager.SecretManagerServiceClient.from_service_account_json('account.json')
+            logging.warning('SecretManager -> Running local; using ./account.json')
+            self._client = secretmanager.SecretManagerServiceClient.from_service_account_json('account.json')
 
     def dict_secret(self, secret_id, version_id=None):
         """
