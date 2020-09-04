@@ -31,10 +31,10 @@ class Secrets:
         scraped_id = environ.get('GCP_PROJECT', project_id)
         self.project_id = scraped_id
         if running_in_gcf():
-            self._client = secretmanager.SecretManagerServiceClient()
+            self.client = secretmanager.SecretManagerServiceClient()
         else:
             logging.warning('PubSubPublisher -> Running local; using ./account.json')
-            self._client = secretmanager.SecretManagerServiceClient.from_service_account_json('account.json')
+            self.client = secretmanager.SecretManagerServiceClient.from_service_account_json('account.json')
 
     def dict_secret(self, secret_id, version_id=None):
         """
@@ -69,3 +69,34 @@ class Secrets:
         payload = jloads(_payload)
         secrets = NestedNamespace(payload)
         return secrets
+
+
+class Config:
+    """defaults to a function running with an od variable 'MONGO' """
+
+    def __init__(self, project_id=None, secret_target=None):
+        from os import environ as os
+        self._function_name = os.get('FUNCTION_NAME')
+        secrets = Secrets(project_id)
+        self.mongo = secrets.dot_secret(os.get(secret_target, 'MONGO'))
+
+    def get_configs_dict(self, function_name=None):
+        from ijr.mongo_lib import MongoReader
+        if function_name is None:
+            function_name = self._function_name
+        with MongoReader(mdb_server=self.mongo.MDB_SERVER, mdb_user=self.mongo.MDB_USER,
+                         mdb_pass=self.mongo.MDB_PASS) as mr_configs:
+            doc_list = mr_configs.find(db_name="common", collection_name="configs", query={"_id": function_name})
+        return next(doc_list, None)
+
+    def get_configs_dot(self, function_name=None):
+        from ijr.mongo_lib import MongoReader
+        if function_name is None:
+            function_name = self._function_name
+        with MongoReader(mdb_server=self.mongo.MDB_SERVER, mdb_user=self.mongo.MDB_USER,
+                         mdb_pass=self.mongo.MDB_PASS) as mr_configs:
+            doc_list = list(mr_configs.find(db_name="common", collection_name="configs", query={"_id": function_name}))
+            if doc_list:
+                return NestedNamespace(doc_list[0])
+        return None
+
