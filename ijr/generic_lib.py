@@ -30,9 +30,9 @@ def dict_compare(old_dict, new_dict, nested=None):
 
 
 def running_in_gcf():
-    """ Determine if code is running in GCF using X_GOOGLE_FUNCTION_NAME
+    """ Determine if code is running in GCF using GCP_PROJECT
     """
-    return os.getenv('X_GOOGLE_FUNCTION_NAME') is not None
+    return os.getenv('GCP_PROJECT') is not None
 
 
 def default_object(o):
