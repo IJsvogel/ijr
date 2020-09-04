@@ -2,6 +2,8 @@
 from google.cloud import secretmanager
 from types import SimpleNamespace
 from json import loads as jloads
+from ijr.generic_lib import running_in_gcf
+import logging
 
 
 class NestedNamespace(SimpleNamespace):
@@ -28,7 +30,11 @@ class Secrets:
         from os import environ
         scraped_id = environ.get('GCP_PROJECT', project_id)
         self.project_id = scraped_id
-        self.client = secretmanager.SecretManagerServiceClient()
+        if running_in_gcf():
+            self._client = secretmanager.SecretManagerServiceClient()
+        else:
+            logging.warning('PubSubPublisher -> Running local; using ./account.json')
+            self._client = secretmanager.SecretManagerServiceClient.from_service_account_json('account.json')
 
     def dict_secret(self, secret_id, version_id=None):
         """
@@ -63,8 +69,3 @@ class Secrets:
         payload = jloads(_payload)
         secrets = NestedNamespace(payload)
         return secrets
-
-
-
-
-
