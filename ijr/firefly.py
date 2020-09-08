@@ -3,8 +3,7 @@ from google.cloud.secretmanager import SecretManagerServiceClient
 from types import SimpleNamespace
 from json import loads as jloads
 from ijr.generic_lib import running_in_gcf
-import logging
-
+from os import environ
 
 class NestedNamespace(SimpleNamespace):
     """need to access list indexs by index id
@@ -27,12 +26,12 @@ class NestedNamespace(SimpleNamespace):
 class Secrets:
 
     def __init__(self, project_id=None):
-        from os import environ
         scraped_id = environ.get('GCP_PROJECT', project_id)
         self.project_id = scraped_id
         if running_in_gcf():
             self.client = SecretManagerServiceClient()
         else:
+            import logging
             logging.warning('SecretManager -> Running local; using ./account.json')
             self.client = SecretManagerServiceClient.from_service_account_json('account.json')
 
@@ -41,7 +40,7 @@ class Secrets:
         Access the payload for the given secret version if one exists. The version
         can be a version number as a string (e.g. "5") or an alias (e.g. "latest").
         """
-        if not version_id:
+        if version_id is None:
             version_id = "latest"
         # Build the resource name of the secret version.
         name = self.client.secret_version_path(self.project_id, secret_id, version_id)
@@ -58,7 +57,7 @@ class Secrets:
           can be a version number as a string (e.g. "5") or an alias (e.g. "latest").
           Returns a namespace for "dot" access
           """
-        if not version_id:
+        if version_id is None:
             version_id = "latest"
         # Build the resource name of the secret version.
         name = self.client.secret_version_path(self.project_id, secret_id, version_id)
@@ -75,11 +74,14 @@ class Config:
     """defaults to a function running with an od variable 'MONGO' """
 
     def __init__(self, project_id=None, secret_target=None):
-        from os import environ as os
-        self._function_name = os.get('FUNCTION_NAME')
+        if secret_target is None:
+            secret_target = "MONGO"
+        self._function_name = environ.get('FUNCTION_NAME')
         secrets = Secrets(project_id)
-        _secret_target = "none" if secret_target is None else secret_target
-        self.mongo = secrets.dot_secret(os.get(_secret_target, os['MONGO']))
+        secret_id = environ.get(str(secret_target))
+        if secret_id is None:
+            raise ValueError("secret_target is required if 'MONGO' environment variable is not set")
+        self.mongo = secrets.dot_secret(secret_id)
 
     def get_configs_dict(self, function_name=None, db_name="common", collection_name="configs"):
         from ijr.mongo_lib import MongoReader
