@@ -9,8 +9,8 @@ setup(
     packages=['ijr'],
     url='https://github.com/IJsvogel/ijr',
     license='MIT',
-    author='Herman Holterman',
-    author_email='herman.holterman@gmail.com',
+    author='IT team IJsvogel Retail',
+    author_email='it@ijsvogelretail.nl',
     description='IJsvogel Package',
     install_requires=['pymongo', 'google-cloud-pubsub', 'google-cloud-secret-manager']
 )
