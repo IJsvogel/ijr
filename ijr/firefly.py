@@ -79,7 +79,7 @@ class Config:
         self._function_name = os.get('FUNCTION_NAME')
         secrets = Secrets(project_id)
         _secret_target = "none" if secret_target is None else secret_target
-        self.mongo = secrets.dot_secret(os.get(_secret_target, os['Mongo']))
+        self.mongo = secrets.dot_secret(os.get(_secret_target, os['MONGO']))
 
     def get_configs_dict(self, function_name=None):
         from ijr.mongo_lib import MongoReader
