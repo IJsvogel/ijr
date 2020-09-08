@@ -81,13 +81,16 @@ class Config:
         _secret_target = "none" if secret_target is None else secret_target
         self.mongo = secrets.dot_secret(os.get(_secret_target, os['MONGO']))
 
-    def get_configs_dict(self, function_name=None):
+    def get_configs_dict(self, function_name=None, db_name="common", collection_name="configs"):
         from ijr.mongo_lib import MongoReader
-        if not function_name:
+        if function_name is None:
             function_name = self._function_name
-        with MongoReader(mdb_server=self.mongo.MDB_SERVER, mdb_user=self.mongo.MDB_USER,
+        with MongoReader(mdb_server=self.mongo.MDB_SERVER,
+                         mdb_user=self.mongo.MDB_USER,
                          mdb_pass=self.mongo.MDB_PASS) as mr_configs:
-            doc_list = mr_configs.find(db_name="common", collection_name="configs", query={"_id": function_name})
+            doc_list = mr_configs.find(db_name=db_name,
+                                       collection_name=collection_name,
+                                       query={"_id": function_name})
         return next(doc_list, None)
 
     def get_configs_dot(self, function_name=None):
