@@ -1,5 +1,5 @@
 """for secret manager """
-from google.cloud import secretmanager
+from google.cloud.secretmanager import SecretManagerServiceClient
 from types import SimpleNamespace
 from json import loads as jloads
 from ijr.generic_lib import running_in_gcf
@@ -31,10 +31,10 @@ class Secrets:
         scraped_id = environ.get('GCP_PROJECT', project_id)
         self.project_id = scraped_id
         if running_in_gcf():
-            self.client = secretmanager.SecretManagerServiceClient()
+            self.client = SecretManagerServiceClient()
         else:
             logging.warning('SecretManager -> Running local; using ./account.json')
-            self._client = secretmanager.SecretManagerServiceClient.from_service_account_json('account.json')
+            self.client = SecretManagerServiceClient.from_service_account_json('account.json')
 
     def dict_secret(self, secret_id, version_id=None):
         """
