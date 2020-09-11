@@ -1,9 +1,10 @@
 """for secret manager """
-from google.cloud import secretmanager
+from google.cloud.secretmanager import SecretManagerServiceClient
 from types import SimpleNamespace
 from json import loads as jloads
 from ijr.generic_lib import running_in_gcf
-import logging
+from os import environ
+from ijr.mongo_lib import MongoReader
 
 
 class NestedNamespace(SimpleNamespace):
@@ -18,7 +19,8 @@ class NestedNamespace(SimpleNamespace):
             if isinstance(value, dict):
                 self.__setattr__(key, NestedNamespace(value))
             elif isinstance(value, list):
-                list_dict = {f"i{str(index)}": _value for index, _value in enumerate(value)}
+                list_dict = {f"i{str(index)}": _value
+                             for index, _value in enumerate(value)}
                 self.__setattr__(key, NestedNamespace(list_dict))
             else:
                 self.__setattr__(key, value)
@@ -27,27 +29,25 @@ class NestedNamespace(SimpleNamespace):
 class Secrets:
 
     def __init__(self, project_id=None):
-        from os import environ
         scraped_id = environ.get('GCP_PROJECT', project_id)
         self.project_id = scraped_id
         if running_in_gcf():
-            self.client = secretmanager.SecretManagerServiceClient()
+            self.client = SecretManagerServiceClient()
         else:
+            import logging
             logging.warning('SecretManager -> Running local; using ./account.json')
-            self._client = secretmanager.SecretManagerServiceClient.from_service_account_json('account.json')
+            self.client = SecretManagerServiceClient.from_service_account_json('account.json')
 
     def dict_secret(self, secret_id, version_id=None):
         """
         Access the payload for the given secret version if one exists. The version
         can be a version number as a string (e.g. "5") or an alias (e.g. "latest").
         """
-        if not version_id:
+        if version_id is None:
             version_id = "latest"
         # Build the resource name of the secret version.
         name = self.client.secret_version_path(self.project_id, secret_id, version_id)
-        # Access the secret version.
         secret = self.client.access_secret_version(name)
-        # return payload as a dict.
         _payload = secret.payload.data.decode('UTF-8')
         payload = jloads(_payload)
         return payload
@@ -58,13 +58,11 @@ class Secrets:
           can be a version number as a string (e.g. "5") or an alias (e.g. "latest").
           Returns a namespace for "dot" access
           """
-        if not version_id:
+        if version_id is None:
             version_id = "latest"
         # Build the resource name of the secret version.
         name = self.client.secret_version_path(self.project_id, secret_id, version_id)
-        # Access the secret version.
         secret = self.client.access_secret_version(name)
-        # return payload as a SimpleNamespace.
         _payload = secret.payload.data.decode('UTF-8')
         payload = jloads(_payload)
         secrets = NestedNamespace(payload)
@@ -73,25 +71,42 @@ class Secrets:
 
 class Config:
     """defaults to a function running with an od variable 'MONGO' """
+    DEFAULT_DB_NAME = "common"
+    DEFAULT_COLLECTION_NAME = "configs"
+    DEFAULT_SECRET_TARGET = "MONGO"
 
-    def __init__(self, project_id=None, secret_target=None):
-        from os import environ as os
-        self._function_name = os.get('FUNCTION_NAME')
+    def __init__(self, project_id=None, secret_target=None, secret_id=None):
+        if secret_id is None:
+            secret_id = self._get_secret_id_from_env_var(secret_target)
+        self._function_name = environ.get('FUNCTION_NAME')
         secrets = Secrets(project_id)
-        _secret_target = "none" if secret_target is None else secret_target
-        self.mongo = secrets.dot_secret(os.get(_secret_target, os['Mongo']))
+        self.mongo = secrets.dot_secret(secret_id)
 
-    def get_configs_dict(self, function_name=None):
-        from ijr.mongo_lib import MongoReader
-        if not function_name:
-            function_name = self._function_name
-        with MongoReader(mdb_server=self.mongo.MDB_SERVER, mdb_user=self.mongo.MDB_USER,
+    def _get_secret_id_from_env_var(self, secret_target=None):
+        if secret_target is None:
+            secret_target = self.DEFAULT_SECRET_TARGET
+        secret_id = environ[str(secret_target)]
+        return secret_id
+
+    def get_configs_dict(self, _id=None, db_name=None, collection_name=None):
+        if _id is None:
+            _id = self._function_name
+        if db_name is None:
+            db_name = self.DEFAULT_DB_NAME
+        if collection_name is None:
+            collection_name = self.DEFAULT_COLLECTION_NAME
+        with MongoReader(mdb_server=self.mongo.MDB_SERVER,
+                         mdb_user=self.mongo.MDB_USER,
                          mdb_pass=self.mongo.MDB_PASS) as mr_configs:
-            doc_list = mr_configs.find(db_name="common", collection_name="configs", query={"_id": function_name})
+            doc_list = mr_configs.find(db_name=db_name,
+                                       collection_name=collection_name,
+                                       query={"_id": _id})
         return next(doc_list, None)
 
-    def get_configs_dot(self, function_name=None):
-        temp = self.get_configs_dict(function_name)
+    def get_configs_dot(self, _id=None, db_name=None, collection_name=None):
+        temp = self.get_configs_dict(_id=_id,
+                                     db_name=db_name,
+                                     collection_name=collection_name)
         if temp:
             return NestedNamespace(temp)
         return None
