@@ -65,18 +65,18 @@ class MongoWriter(object):
          - `mode`: Editing mode 'one' or 'many'
         """
         if not isinstance(query, dict):
-            raise TypeError(f'{query} must be an instance of dict')
+            raise TypeError('query must be an instance of dict')
 
         if not isinstance(field, dict):
-            raise TypeError(f'{field} must be an instance of dict')
+            raise TypeError('field must be an instance of dict')
 
         if not isinstance(mode, str):
-            raise TypeError(f'{mode} must be an instance of str')
+            raise TypeError('mode must be an instance of str')
 
         modes = {"one", "many"}
         mode = mode.lower()
         if mode not in modes:
-            raise ValueError(f'Invalid mode. Expected one of: {modes}')
+            raise ValueError('Invalid mode. Expected one of: {"one", "many"}')
 
         if mode == "one":
             self._statements.append(UpdateOne(filter=query,
