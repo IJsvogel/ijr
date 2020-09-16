@@ -47,7 +47,6 @@ class Secrets:
             version_id = "latest"
             # Build the resource name of the secret version.
         name = f"projects/{self.project_id}/secrets/{secret_id}/versions/{version_id}"
-        print(type(name))
         secret = self.client.access_secret_version(name=name)
         _payload = secret.payload.data.decode('UTF-8')
         payload = jloads(_payload)
