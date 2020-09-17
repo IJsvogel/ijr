@@ -1,5 +1,5 @@
 """for secret manager """
-from google.cloud.secretmanager import SecretManagerServiceClient
+from google.cloud import secretmanager_v1 as sm
 from types import SimpleNamespace
 from json import loads as jloads
 from ijr.generic_lib import running_in_gcf
@@ -32,11 +32,11 @@ class Secrets:
         scraped_id = environ.get('GCP_PROJECT', project_id)
         self.project_id = scraped_id
         if running_in_gcf():
-            self.client = SecretManagerServiceClient()
+            self.client = sm.SecretManagerServiceClient()
         else:
             import logging
             logging.warning('SecretManager -> Running local; using ./account.json')
-            self.client = SecretManagerServiceClient.from_service_account_json('account.json')
+            self.client =sm.SecretManagerServiceClient.from_service_account_json('account.json')
 
     def dict_secret(self, secret_id, version_id=None):
         """
@@ -45,9 +45,9 @@ class Secrets:
         """
         if version_id is None:
             version_id = "latest"
-        # Build the resource name of the secret version.
-        name = self.client.secret_version_path(self.project_id, secret_id, version_id)
-        secret = self.client.access_secret_version(name)
+            # Build the resource name of the secret version.
+        name = f"projects/{self.project_id}/secrets/{secret_id}/versions/{version_id}"
+        secret = self.client.access_secret_version(name=name)
         _payload = secret.payload.data.decode('UTF-8')
         payload = jloads(_payload)
         return payload
@@ -58,15 +58,10 @@ class Secrets:
           can be a version number as a string (e.g. "5") or an alias (e.g. "latest").
           Returns a namespace for "dot" access
           """
-        if version_id is None:
-            version_id = "latest"
-        # Build the resource name of the secret version.
-        name = self.client.secret_version_path(self.project_id, secret_id, version_id)
-        secret = self.client.access_secret_version(name)
-        _payload = secret.payload.data.decode('UTF-8')
-        payload = jloads(_payload)
-        secrets = NestedNamespace(payload)
-        return secrets
+
+        payload = self.dict_secret(secret_id, version_id=None)
+        if payload:
+            return NestedNamespace(payload)
 
 
 class Config:
