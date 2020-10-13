@@ -45,7 +45,7 @@ class MongoWriter(object):
          document replacement/upsert
         """
         doc['_ts'] = datetime.now()
-        if doc_key:
+        if doc_key is not None:
             doc['_id'] = '%s' % doc_key
             self._statements.append(ReplaceOne(filter={'_id': doc['_id']}, 
                                                replacement=doc, 
