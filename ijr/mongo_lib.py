@@ -36,7 +36,7 @@ class MongoWriter(object):
         self._write_to_server()
         self._client.close()
 
-    def write_data(self, doc: dict, doc_key: str = None):
+    def write_data(self, doc: dict, doc_key: str = None, force_timestamp=True):
         """write document with _ts (timestamp) included
 
         :Parameters:
@@ -44,7 +44,10 @@ class MongoWriter(object):
          - `doc_key` (optional): Document key (_id) to be used for 
          document replacement/upsert
         """
-        doc['_ts'] = datetime.now()
+        if force_timestamp:
+            doc['_ts'] = datetime.now()
+        else:
+            doc['_ts'] = doc.get('_ts', datetime.now())
         if doc_key is not None:
             doc['_id'] = '%s' % doc_key
             self._statements.append(ReplaceOne(filter={'_id': doc['_id']}, 
