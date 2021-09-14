@@ -74,6 +74,7 @@ class Config:
         if secret_id is None:
             secret_id = self._get_secret_id_from_env_var(secret_target)
         self._function_name = environ.get('FUNCTION_NAME')
+        self._check_function = environ.get('X_GOOGLE_FUNCTION_NAME')
         secrets = Secrets(project_id)
         self.mongo = secrets.dot_secret(secret_id)
 
@@ -85,7 +86,7 @@ class Config:
 
     def get_configs_dict(self, _id=None, db_name=None, collection_name=None):
         if _id is None:
-            _id = self._function_name
+            _id = self._function_name if self._function_name == self._check_function else self._check_function
         if db_name is None:
             db_name = self.DEFAULT_DB_NAME
         if collection_name is None:
