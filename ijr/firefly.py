@@ -2,6 +2,8 @@
 from google.cloud import secretmanager_v1 as sm
 from types import SimpleNamespace
 from json import loads as jloads
+
+import pymongo
 from ijr.generic_lib import running_in_gcf
 from os import environ
 from ijr.mongo_lib import MongoReader
@@ -93,10 +95,10 @@ class Config:
         with MongoReader(mdb_server=self.mongo.MDB_SERVER,
                          mdb_user=self.mongo.MDB_USER,
                          mdb_pass=self.mongo.MDB_PASS) as mr_configs:
-            doc_list = mr_configs.find(db_name=db_name,
+            doc = next(mr_configs.find(db_name=db_name,
                                        collection_name=collection_name,
-                                       query={"_id": _id})
-        return next(doc_list, None)
+                                       query={"_id": _id}), None)
+        return doc
 
     def get_configs_dot(self, _id=None, db_name=None, collection_name=None):
         temp = self.get_configs_dict(_id=_id,
